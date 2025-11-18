@@ -1,0 +1,57 @@
+# models/blockchain.py
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, Text, DECIMAL, DateTime, ForeignKey, Index
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
+Base = declarative_base()
+
+
+class Block(Base):
+    """区块表"""
+    __tablename__ = "blocks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    height = Column(Integer, unique=True, nullable=False, index=True, comment="区块高度")
+    block_hash = Column(String(64), unique=True, nullable=False, index=True, comment="区块哈希")
+    prev_hash = Column(String(64), nullable=True, index=True, comment="前一区块哈希")
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, comment="区块创建时间")
+    tx_count = Column(Integer, default=0, nullable=False, comment="区块内交易数量")
+    total_amount_in_block = Column(DECIMAL(15, 2), default=0, nullable=False, comment="区块内捐赠总金额")
+    project_id_summary = Column(Text, nullable=True, comment="区块内项目ID摘要")
+    raw_metadata = Column(Text, nullable=True, comment="原始元数据")
+
+    # 关系
+    transactions = relationship("ChainTransaction", back_populates="block", cascade="all, delete-orphan")
+
+    # 索引
+    __table_args__ = (
+        Index('idx_height_hash', 'height', 'block_hash'),
+        Index('idx_timestamp', 'timestamp'),
+    )
+
+
+class ChainTransaction(Base):
+    """链上交易表"""
+    __tablename__ = "chain_txs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    block_id = Column(Integer, ForeignKey("blocks.id"), nullable=False, comment="所属区块ID")
+    project_id = Column(Integer, nullable=False, index=True, comment="公益项目ID")
+    donor_username = Column(String(100), nullable=True, index=True, comment="捐赠者用户名")
+    amount = Column(DECIMAL(15, 2), nullable=False, comment="捐赠金额")
+    remark = Column(Text, nullable=True, comment="备注")
+    tx_hash = Column(String(64), unique=True, nullable=False, index=True, comment="交易哈希")
+    tx_index = Column(Integer, nullable=False, comment="区块内交易索引")
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, comment="交易时间")
+    external_donate_id = Column(Integer, nullable=True, index=True, comment="关联业务侧捐赠记录ID")
+
+    # 关系
+    block = relationship("Block", back_populates="transactions")
+
+    # 索引
+    __table_args__ = (
+        Index('idx_block_tx', 'block_id', 'tx_index'),
+        Index('idx_project_amount', 'project_id', 'amount'),
+        Index('idx_external_donate', 'external_donate_id'),
+    )
