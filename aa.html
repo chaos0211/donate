@@ -1,0 +1,2440 @@
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>公益项目管理</title>
+    <script src="https://res.gemcoder.com/js/reload.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#165DFF',
+              success: '#00B42A',
+              warning: '#FF7D00',
+              danger: '#F53F3F',
+              info: '#86909C',
+              'primary-light': '#E8F3FF',
+              'success-light': '#E8FFF3',
+              'warning-light': '#FFF7E8',
+              'danger-light': '#FFE8E8',
+              'gray-100': '#F2F3F5',
+              'gray-200': '#E5E6EB',
+              'gray-300': '#C9CDD4',
+              'gray-400': '#86909C',
+              'gray-500': '#4E5969',
+              'gray-600': '#272E3B',
+              'gray-700': '#1D2129'
+            },
+            fontFamily: {
+              inter: ['Inter', 'system-ui', 'sans-serif']
+            },
+            boxShadow: {
+              'card': '0 2px 8px 0 rgba(0, 0, 0, 0.08)',
+              'dropdown': '0 4px 16px 0 rgba(0, 0, 0, 0.12)',
+              'modal': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)'
+            }
+          }
+        }
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer utilities {
+          .content-auto {
+              content-visibility: auto;
+          }
+          .text-shadow {
+              text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          .transition-bg {
+              transition: background-color 0.3s ease;
+          }
+          .transition-transform {
+              transition: transform 0.3s ease;
+          }
+          .transition-all-300 {
+              transition: all 0.3s ease;
+          }
+          .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+          }
+          .scrollbar-hide {
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+          }
+          .progress-bar {
+              height: 6px;
+              border-radius: 3px;
+              overflow: hidden;
+          }
+          .progress-value {
+              height: 100%;
+              transition: width 0.6s ease;
+          }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 font-inter text-gray-700 min-h-screen flex flex-col">
+    <!-- [MODULE] a1b_页面容器 -->
+    <div class="flex flex-col min-h-screen">
+      <!-- [MODULE] c2d_顶部导航栏 -->
+      <header class="bg-white shadow-sm sticky top-0 z-30">
+        <div
+          class="container mx-auto px-4 py-4 flex items-center justify-between"
+        >
+          <div class="flex items-center space-x-2">
+            <i class="fas fa-heart text-primary text-2xl"> </i>
+            <div>
+              <h1 class="text-xl font-bold text-gray-700">系统管理</h1>
+              <p class="text-sm text-gray-400">
+                管理系统用户、权限、参数配置与审计日志
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button
+              class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center transition-all-300 shadow-sm hover:shadow"
+              id="addUserBtn"
+            >
+              <i class="fas fa-plus mr-2"> </i>
+              <span> 新增用户 </span>
+            </button>
+            <button
+              class="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg flex items-center transition-all-300 shadow-sm hover:shadow"
+              id="batchImportBtn"
+            >
+              <i class="fas fa-file-import mr-2"> </i>
+              <span> 批量导入 </span>
+            </button>
+          </div>
+        </div>
+      </header>
+      <!-- [/MODULE] c2d_顶部导航栏 -- 包含标题、副标题和操作按钮区 -->
+      <!-- [MODULE] e3f_主内容区域 -->
+      <main class="flex-grow container mx-auto px-4 py-6">
+        <!-- [MODULE] b1c_区块链状态小卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+          <!-- [MODULE] d2e_当前区块高度卡片 -->
+          <div
+            class="bg-white rounded-xl shadow-card p-5 transition-all-300 hover:shadow-lg hover:-translate-y-1"
+          >
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">当前区块高度</p>
+                <h3
+                  class="text-3xl font-bold mt-1 text-primary"
+                  id="blockHeight"
+                >
+                  12,584
+                </h3>
+                <p class="text-success text-sm mt-2 flex items-center">
+                  <i class="fas fa-arrow-up mr-1"> </i>
+                  <span> 最近 24h +128 区块 </span>
+                </p>
+              </div>
+              <div
+                class="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center text-primary"
+              >
+                <i class="fas fa-cubes text-xl"> </i>
+              </div>
+            </div>
+          </div>
+          <!-- [/MODULE] d2e_当前区块高度卡片 -- 显示当前区块高度及24小时增长情况 -->
+          <!-- [MODULE] f3g_链上捐赠总笔数卡片 -->
+          <div
+            class="bg-white rounded-xl shadow-card p-5 transition-all-300 hover:shadow-lg hover:-translate-y-1"
+          >
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">链上捐赠总笔数</p>
+                <h3
+                  class="text-3xl font-bold mt-1 text-success"
+                  id="totalTransactions"
+                >
+                  3,842
+                </h3>
+                <p class="text-success text-sm mt-2 flex items-center">
+                  <i class="fas fa-arrow-up mr-1"> </i>
+                  <span> 今日新增 42 笔 </span>
+                </p>
+              </div>
+              <div
+                class="w-12 h-12 rounded-full bg-success-light flex items-center justify-center text-success"
+              >
+                <i class="fas fa-exchange-alt text-xl"> </i>
+              </div>
+            </div>
+          </div>
+          <!-- [/MODULE] f3g_链上捐赠总笔数卡片 -- 显示链上捐赠总笔数及今日新增情况 -->
+          <!-- [MODULE] h4i_链上捐赠总金额卡片 -->
+          <div
+            class="bg-white rounded-xl shadow-card p-5 transition-all-300 hover:shadow-lg hover:-translate-y-1"
+          >
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">链上捐赠总金额</p>
+                <h3
+                  class="text-3xl font-bold mt-1 text-warning"
+                  id="totalAmount"
+                >
+                  ¥ 24,568,900
+                </h3>
+                <p class="text-success text-sm mt-2 flex items-center">
+                  <i class="fas fa-arrow-up mr-1"> </i>
+                  <span> 本月累计 ¥ 1,258,400 </span>
+                </p>
+              </div>
+              <div
+                class="w-12 h-12 rounded-full bg-warning-light flex items-center justify-center text-warning"
+              >
+                <i class="fas fa-money-bill-wave text-xl"> </i>
+              </div>
+            </div>
+          </div>
+          <!-- [/MODULE] h4i_链上捐赠总金额卡片 -- 显示链上捐赠总金额及本月累计情况 -->
+          <!-- [MODULE] j5k_节点同步状态卡片 -->
+          <div
+            class="bg-white rounded-xl shadow-card p-5 transition-all-300 hover:shadow-lg hover:-translate-y-1"
+          >
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-500 text-sm">节点同步状态</p>
+                <h3
+                  class="text-3xl font-bold mt-1 text-success"
+                  id="nodeStatus"
+                >
+                  已同步
+                </h3>
+                <p class="text-gray-500 text-sm mt-2 flex items-center">
+                  <i class="fas fa-clock mr-1"> </i>
+                  <span> 最近心跳：12 秒前 </span>
+                </p>
+              </div>
+              <div
+                class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"
+              >
+                <i class="fas fa-server text-xl"> </i>
+              </div>
+            </div>
+          </div>
+          <!-- [/MODULE] j5k_节点同步状态卡片 -- 显示节点同步状态及最近心跳时间 -->
+        </div>
+        <!-- [/MODULE] b1c_区块链状态小卡片 -- 包含当前区块高度、链上捐赠总笔数、链上捐赠总金额和节点同步状态四个小卡片 -->
+        <!-- [MODULE] sys_management_main_area_系统管理主区域 -->
+        <div class="flex flex-col lg:flex-row gap-6">
+          <!-- [MODULE] sys_nav_左侧导航区域 -->
+          <div class="lg:w-1/5 bg-white rounded-xl shadow-card p-4 h-fit">
+            <nav class="space-y-1">
+              <button
+                class="sys-nav-item w-full text-left px-4 py-3 rounded-lg bg-primary-light text-primary font-medium flex items-center transition-all-300"
+                data-target="userManagement"
+              >
+                <i class="fas fa-users mr-3 w-5 text-center"> </i>
+                <span> 用户管理 </span>
+              </button>
+              <button
+                class="sys-nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700 font-medium flex items-center transition-all-300"
+                data-target="rolePermission"
+              >
+                <i class="fas fa-shield-alt mr-3 w-5 text-center"> </i>
+                <span> 权限与角色管理 </span>
+              </button>
+              <button
+                class="sys-nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700 font-medium flex items-center transition-all-300"
+                data-target="systemSettings"
+              >
+                <i class="fas fa-cog mr-3 w-5 text-center"> </i>
+                <span> 系统参数设置 </span>
+              </button>
+              <button
+                class="sys-nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700 font-medium flex items-center transition-all-300"
+                data-target="auditLogs"
+              >
+                <i class="fas fa-clipboard-list mr-3 w-5 text-center"> </i>
+                <span> 日志与审计记录 </span>
+              </button>
+            </nav>
+          </div>
+          <!-- [/MODULE] sys_nav_左侧导航区域 -- 系统管理模块导航菜单，包含用户管理、权限与角色管理、系统参数设置、日志与审计记录四个功能入口 -->
+          <!-- [MODULE] sys_content_右侧内容区域 -->
+          <div class="lg:w-4/5 space-y-6">
+            <!-- [MODULE] user_management_用户管理区域 -->
+            <div class="sys-content-area" id="userManagement">
+              <div class="bg-white rounded-xl shadow-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                  <h2 class="text-xl font-bold text-gray-700">用户管理</h2>
+                  <div class="flex space-x-2">
+                    <div class="relative">
+                      <input
+                        type="text"
+                        placeholder="搜索用户名或邮箱..."
+                        class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                      />
+                      <i
+                        class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      >
+                      </i>
+                    </div>
+                    <select
+                      class="border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    >
+                      <option>所有状态</option>
+                      <option>启用</option>
+                      <option>禁用</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          用户名
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          邮箱
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          状态
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          创建时间
+                        </th>
+                        <th
+                          class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          操作
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div
+                              class="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center text-primary font-medium"
+                            >
+                              AD
+                            </div>
+                            <div class="ml-3">
+                              <div class="text-sm font-medium text-gray-700">
+                                admin
+                              </div>
+                              <div class="text-xs text-gray-500">
+                                系统管理员
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm text-gray-700">
+                            admin@example.com
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 py-1 text-xs rounded-full bg-success-light text-success"
+                          >
+                            启用
+                          </span>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-01-15
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                        >
+                          <button
+                            class="text-primary hover:text-primary/80 mr-3 transition-colors"
+                          >
+                            编辑
+                          </button>
+                          <button
+                            class="text-gray-500 hover:text-gray-700 mr-3 transition-colors"
+                          >
+                            详情
+                          </button>
+                          <button
+                            class="text-danger hover:text-danger/80 transition-colors"
+                          >
+                            禁用
+                          </button>
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div
+                              class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-medium"
+                            >
+                              US
+                            </div>
+                            <div class="ml-3">
+                              <div class="text-sm font-medium text-gray-700">
+                                user01
+                              </div>
+                              <div class="text-xs text-gray-500">普通用户</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm text-gray-700">
+                            user01@example.com
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 py-1 text-xs rounded-full bg-success-light text-success"
+                          >
+                            启用
+                          </span>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-02-20
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                        >
+                          <button
+                            class="text-primary hover:text-primary/80 mr-3 transition-colors"
+                          >
+                            编辑
+                          </button>
+                          <button
+                            class="text-gray-500 hover:text-gray-700 mr-3 transition-colors"
+                          >
+                            详情
+                          </button>
+                          <button
+                            class="text-danger hover:text-danger/80 transition-colors"
+                          >
+                            禁用
+                          </button>
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div
+                              class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-medium"
+                            >
+                              US
+                            </div>
+                            <div class="ml-3">
+                              <div class="text-sm font-medium text-gray-700">
+                                user02
+                              </div>
+                              <div class="text-xs text-gray-500">普通用户</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm text-gray-700">
+                            user02@example.com
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 py-1 text-xs rounded-full bg-danger-light text-danger"
+                          >
+                            禁用
+                          </span>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-03-10
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                        >
+                          <button
+                            class="text-primary hover:text-primary/80 mr-3 transition-colors"
+                          >
+                            编辑
+                          </button>
+                          <button
+                            class="text-gray-500 hover:text-gray-700 mr-3 transition-colors"
+                          >
+                            详情
+                          </button>
+                          <button
+                            class="text-success hover:text-success/80 transition-colors"
+                          >
+                            启用
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="flex justify-between items-center mt-6">
+                  <div class="text-sm text-gray-500">显示 1-3 条，共 24 条</div>
+                  <div class="flex space-x-1">
+                    <button
+                      class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled
+                    >
+                      上一页
+                    </button>
+                    <button
+                      class="px-3 py-1 border border-primary bg-primary text-white rounded"
+                    >
+                      1
+                    </button>
+                    <button
+                      class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    >
+                      2
+                    </button>
+                    <button
+                      class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    >
+                      3
+                    </button>
+                    <button
+                      class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    >
+                      下一页
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- [/MODULE] user_management_用户管理区域 -- 包含用户列表表格、搜索过滤栏、分页组件，提供新增、编辑、禁用/启用用户功能 -->
+            <!-- [MODULE] role_permission_权限与角色管理区域 -->
+            <div class="sys-content-area hidden" id="rolePermission">
+              <div class="bg-white rounded-xl shadow-card p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                  <h2 class="text-xl font-bold text-gray-700">角色管理</h2>
+                  <button
+                    class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center transition-all-300 shadow-sm hover:shadow"
+                  >
+                    <i class="fas fa-plus mr-2"> </i>
+                    <span> 新增角色 </span>
+                  </button>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          角色名称
+                        </th>
+                        <th
+                          class="px6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          角色说明
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          成员数量
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          创建时间
+                        </th>
+                        <th
+                          class="px-6 py-4 whitespace-nowrap text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          操作
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-medium text-gray-700">
+                            系统管理员
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="text-sm text-gray-500">
+                            拥有系统全部操作权限
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm text-gray-700">1</div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-01-10
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                        >
+                          <button
+                            class="text-primary hover:text-primary/80 mr-3 transition-colors"
+                          >
+                            编辑权限
+                          </button>
+                          <button
+                            class="text-gray-500 hover:text-gray-700 mr-3 transition-colors"
+                          >
+                            分配成员
+                          </button>
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-medium text-gray-700">
+                            普通用户
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="text-sm text-gray-500">
+                            拥有基础操作权限
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm text-gray-700">23</div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-01-10
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                        >
+                          <button
+                            class="text-primary hover:text-primary/80 mr-3 transition-colors"
+                          >
+                            编辑权限
+                          </button>
+                          <button
+                            class="text-gray-500 hover:text-gray-700 mr-3 transition-colors"
+                          >
+                            分配成员
+                          </button>
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-medium text-gray-700">
+                            审计员
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="text-sm text-gray-500">
+                            仅拥有日志查看权限
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm text-gray-700">2</div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-02-15
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                        >
+                          <button
+                            class="text-primary hover:text-primary/80 mr-3 transition-colors"
+                          >
+                            编辑权限
+                          </button>
+                          <button
+                            class="text-gray-500 hover:text-gray-700 mr-3 transition-colors"
+                          >
+                            分配成员
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="bg-white rounded-xl shadow-card p-6">
+                <h2 class="text-xl font-bold text-gray-700 mb-6">权限配置</h2>
+                <div class="mb-6">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    选择角色
+                  </label>
+                  <select
+                    class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                  >
+                    <option>系统管理员</option>
+                    <option>普通用户</option>
+                    <option>审计员</option>
+                  </select>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4 mb-6">
+                  <div class="space-y-4">
+                    <div class="permission-group">
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="perm-all"
+                          class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                        />
+                        <label
+                          for="perm-all"
+                          class="ml-2 text-sm font-medium text-gray-700"
+                        >
+                          全选权限
+                        </label>
+                      </div>
+                    </div>
+                    <div class="permission-group mt-4">
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="perm-user"
+                          class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                          checked
+                        />
+                        <label
+                          for="perm-user"
+                          class="ml-2 text-sm font-medium text-gray-700"
+                        >
+                          用户管理
+                        </label>
+                      </div>
+                      <div class="ml-6 mt-2 space-y-2">
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-user-view"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                            checked
+                          />
+                          <label
+                            for="perm-user-view"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            查看用户
+                          </label>
+                        </div>
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-user-add"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                            checked
+                          />
+                          <label
+                            for="perm-user-add"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            添加用户
+                          </label>
+                        </div>
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-user-edit"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                            checked
+                          />
+                          <label
+                            for="perm-user-edit"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            编辑用户
+                          </label>
+                        </div>
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-user-del"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                            checked
+                          />
+                          <label
+                            for="perm-user-del"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            删除用户
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="permission-group">
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="perm-role"
+                          class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                          checked
+                        />
+                        <label
+                          for="perm-role"
+                          class="ml-2 text-sm font-medium text-gray-700"
+                        >
+                          角色管理
+                        </label>
+                      </div>
+                      <div class="ml-6 mt-2 space-y-2">
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-role-view"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                            checked
+                          />
+                          <label
+                            for="perm-role-view"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            查看角色
+                          </label>
+                        </div>
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-role-add"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                            checked
+                          />
+                          <label
+                            for="perm-role-add"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            添加角色
+                          </label>
+                        </div>
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-role-edit"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                            checked
+                          />
+                          <label
+                            for="perm-role-edit"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            编辑角色
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="permission-group">
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="perm-system"
+                          class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                        />
+                        <label
+                          for="perm-system"
+                          class="ml-2 text-sm font-medium text-gray-700"
+                        >
+                          系统设置
+                        </label>
+                      </div>
+                      <div class="ml-6 mt-2 space-y-2">
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-system-view"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                          />
+                          <label
+                            for="perm-system-view"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            查看系统设置
+                          </label>
+                        </div>
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-system-edit"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                          />
+                          <label
+                            for="perm-system-edit"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            编辑系统设置
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="permission-group">
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="perm-log"
+                          class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                          checked
+                        />
+                        <label
+                          for="perm-log"
+                          class="ml-2 text-sm font-medium text-gray-700"
+                        >
+                          日志管理
+                        </label>
+                      </div>
+                      <div class="ml-6 mt-2 space-y-2">
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-log-view"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                            checked
+                          />
+                          <label
+                            for="perm-log-view"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            查看日志
+                          </label>
+                        </div>
+                        <div class="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="perm-log-export"
+                            class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                          />
+                          <label
+                            for="perm-log-export"
+                            class="ml-2 text-sm text-gray-600"
+                          >
+                            导出日志
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                  <button
+                    class="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-all-300"
+                  >
+                    取消
+                  </button>
+                  <button
+                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all-300"
+                  >
+                    保存权限
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- [/MODULE] role_permission_权限与角色管理区域 -- 包含角色列表、角色对应权限树、角色分配成员功能，提供角色新增和权限配置功能 -->
+            <!-- [MODULE] system_settings_系统参数设置区域 -->
+            <div class="sys-content-area hidden" id="systemSettings">
+              <div class="bg-white rounded-xl shadow-card p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-700 mb-6">
+                  系统运行配置
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      系统名称
+                    </label>
+                    <input
+                      type="text"
+                      value="公益项目管理系统"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      区块链节点地址
+                    </label>
+                    <input
+                      type="text"
+                      value="http://192.168.1.100:8545"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      数据同步周期 (分钟)
+                    </label>
+                    <input
+                      type="number"
+                      value="30"
+                      min="1"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      系统Logo
+                    </label>
+                    <div
+                      class="mt-1 flex items-center justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg"
+                    >
+                      <div class="space-y-1 text-center">
+                        <i
+                          class="fas fa-cloud-upload-alt text-gray-400 text-3xl mb-2"
+                        >
+                        </i>
+                        <div class="flex text-sm text-gray-600">
+                          <label
+                            for="logo-upload"
+                            class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/80"
+                          >
+                            <span> 上传图片 </span>
+                            <input
+                              id="logo-upload"
+                              name="logo-upload"
+                              type="file"
+                              class="sr-only"
+                            />
+                          </label>
+                          <p class="pl-1">或拖放</p>
+                        </div>
+                        <p class="text-xs text-gray-500">
+                          PNG, JPG, GIF 最大 2MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-white rounded-xl shadow-card p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-700 mb-6">安全配置</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      密码策略
+                    </label>
+                    <select
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    >
+                      <option>低 (至少6位字符)</option>
+                      <option selected>中 (至少8位，包含字母和数字)</option>
+                      <option>
+                        高 (至少10位，包含大小写字母、数字和特殊字符)
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      会话过期时间 (分钟)
+                    </label>
+                    <input
+                      type="number"
+                      value="30"
+                      min="5"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      登录失败锁定次数
+                    </label>
+                    <input
+                      type="number"
+                      value="5"
+                      min="0"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      锁定时长 (分钟)
+                    </label>
+                    <input
+                      type="number"
+                      value="15"
+                      min="1"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="bg-white rounded-xl shadow-card p-6">
+                <h2 class="text-xl font-bold text-gray-700 mb-6">通知配置</h2>
+                <div class="mb-6">
+                  <label class="flex items-center">
+                    <input
+                      type="checkbox"
+                      class="w-4 h-4 text-primary rounded focus:ring-primary/50"
+                      checked
+                    />
+                    <span class="ml-2 text-sm font-medium text-gray-700">
+                      启用邮件通知
+                    </span>
+                  </label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      SMTP 服务器
+                    </label>
+                    <input
+                      type="text"
+                      value="smtp.example.com"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      SMTP 端口
+                    </label>
+                    <input
+                      type="number"
+                      value="587"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      发件人邮箱
+                    </label>
+                    <input
+                      type="email"
+                      value="notifications@example.com"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      发件人名称
+                    </label>
+                    <input
+                      type="text"
+                      value="系统通知"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      SMTP 用户名
+                    </label>
+                    <input
+                      type="text"
+                      value="notifications@example.com"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      SMTP 密码
+                    </label>
+                    <input
+                      type="password"
+                      value="********"
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300"
+                    />
+                  </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                  <button
+                    class="px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-all-300"
+                  >
+                    重置
+                  </button>
+                  <button
+                    class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all-300"
+                  >
+                    保存配置
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- [/MODULE] system_settings_系统参数设置区域 -- 包含系统运行配置、安全配置、邮件通知配置，提供参数设置和保存功能 -->
+            <!-- [MODULE] audit_logs_日志与审计记录区域 -->
+            <div class="sys-content-area hidden" id="auditLogs">
+              <div class="bg-white rounded-xl shadow-card p-6 mb-6">
+                <div
+                  class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4"
+                >
+                  <h2 class="text-xl font-bold text-gray-700">操作日志</h2>
+                  <div class="flex flex-wrap gap-3">
+                    <div
+                      class="flex items-center border border-gray-200 rounded-lg overflow-hidden"
+                    >
+                      <input
+                        type="date"
+                        class="px-3 py-2 text-sm focus:outline-none"
+                      />
+                      <span class="px-2 text-gray-400"> 至 </span>
+                      <input
+                        type="date"
+                        class="px-3 py-2 text-sm focus:outline-none"
+                      />
+                    </div>
+                    <div class="relative">
+                      <input
+                        type="text"
+                        placeholder="关键字搜索..."
+                        class="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300 text-sm"
+                      />
+                      <i
+                        class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      >
+                      </i>
+                    </div>
+                    <select
+                      class="border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all-300 text-sm"
+                    >
+                      <option>所有操作类型</option>
+                      <option>用户管理</option>
+                      <option>角色权限</option>
+                      <option>系统配置</option>
+                    </select>
+                    <button
+                      class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center transition-all-300 shadow-sm hover:shadow text-sm"
+                    >
+                      <i class="fas fa-download mr-2"> </i>
+                      <span> 导出日志 </span>
+                    </button>
+                  </div>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          操作人
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          操作类型
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          操作时间
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          IP地址
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          详情
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div
+                              class="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center text-primary text-sm font-medium"
+                            >
+                              AD
+                            </div>
+                            <div class="ml-3">
+                              <div class="text-sm font-medium text-gray-700">
+                                admin
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-[6px] py-[2px] text-xs rounded-full bg-primary-light text-primary"
+                          >
+                            用户管理
+                          </span>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-06-15 14:32:21
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          192.168.1.100
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                          编辑用户信息：用户ID=2，用户名=user01，修改邮箱为user01_new@example.com
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div
+                              class="h-8 w-8 rounded-full bg-primary-light flex items-center justify-center text-primary text-sm font-medium"
+                            >
+                              AD
+                            </div>
+                            <div class="ml-3">
+                              <div class="text-sm font-medium text-gray-700">
+                                admin
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-[6px] py-[2px] text-xs rounded-full bg-warning-light text-warning"
+                          >
+                            角色权限
+                          </span>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-06-15 11:20:45
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          192.168.1.100
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                          更新角色权限：角色=审计员，新增权限=查看日志、导出日志
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div
+                              class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-sm font-medium"
+                            >
+                              US
+                            </div>
+                            <div class="ml-3">
+                              <div class="text-sm font-medium text-gray-700">
+                                user01
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-[6px] py-[2px] text-xs rounded-full bg-success-light text-success"
+                          >
+                            系统配置
+                          </span>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-06-14 09:15:33
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          192.168.1.105
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                          更新系统参数：同步周期从60分钟修改为30分钟
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="flex justify-between items-center mt-6">
+                  <div class="text-sm text-gray-500">
+                    显示 1-3 条，共 156 条
+                  </div>
+                  <div class="flex space-x-1">
+                    <button
+                      class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled
+                    >
+                      上一页
+                    </button>
+                    <button
+                      class="px-3 py-1 border border-primary bg-primary text-white rounded"
+                    >
+                      1
+                    </button>
+                    <button
+                      class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    >
+                      2
+                    </button>
+                    <button
+                      class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    >
+                      3
+                    </button>
+                    <button
+                      class="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50"
+                    >
+                      下一页
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-white rounded-xl shadow-card p-6">
+                <div class="flex justify-between items-center mb-6">
+                  <h2 class="text-xl font-bold text-gray-700">登录日志</h2>
+                  <button
+                    class="text-primary hover:text-primary/80 text-sm flex items-center transition-colors"
+                  >
+                    <i class="fas fa-trash-alt mr-2"> </i>
+                    <span> 清理30天前日志 </span>
+                  </button>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          用户名
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          登录时间
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          IP地址
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          设备信息
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          登录状态
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-medium text-gray-700">
+                            admin
+                          </div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-06-15 08:30:15
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          192.168.1.100
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                          Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+                          Chrome/114.0.0.0
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 py-1 text-xs rounded-full bg-success-light text-success"
+                          >
+                            成功
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-medium text-gray-700">
+                            user01
+                          </div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-06-15 09:15:22
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          192.168.1.105
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                          Mozilla/5.0 (Macintosh; Intel Mac OS X 13_4)
+                          Safari/16.5
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 py-1 text-xs rounded-full bg-success-light text-success"
+                          >
+                            成功
+                          </span>
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-medium text-gray-700">
+                            admin
+                          </div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2023-06-14 22:05:47
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          203.0.113.45
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                          Mozilla/5.0 (Linux; Android 13) Firefox/113.0
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 py-1 text-xs rounded-full bg-danger-light text-danger"
+                          >
+                            失败
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <!-- [/MODULE] audit_logs_日志与审计记录区域 -- 包含系统操作日志、登录日志，提供日志过滤、下载和清理功能 -->
+          </div>
+          <!-- [/MODULE] sys_content_右侧内容区域 -- 系统管理各功能模块的内容展示区域 -->
+        </div>
+        <!-- [/MODULE] sys_management_main_area_系统管理主区域 -- 系统管理模块主内容区域，包含左侧导航和右侧功能内容区 -->
+      </main>
+      <!-- [/MODULE] e3f_主内容区域 -- 包含筛选查询条件区、项目概览统计卡片区和项目列表表格区 -->
+    </div>
+    <!-- [/MODULE] a1b_页面容器 -->
+    <!-- [MODULE] w2x_新增编辑项目弹窗 -->
+    <div
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden"
+      id="projectModal"
+    >
+      <div
+        class="bg-white rounded-xl shadow-modal w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
+        <div
+          class="p-6 border-b border-gray-100 flex items-center justify-between"
+        >
+          <h2 class="text-xl font-bold text-gray-700" id="modalTitle">
+            新增公益项目
+          </h2>
+          <button
+            class="text-gray-400 hover:text-gray-700 transition-colors"
+            id="closeModalBtn"
+          >
+            <i class="fas fa-times text-xl"> </i>
+          </button>
+        </div>
+        <div class="p-6">
+          <form id="projectForm">
+            <input id="projectIdInput" type="hidden" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="md:col-span-2">
+                <label
+                  class="block text-sm font-medium text-gray-500 mb-1"
+                  for="projectName"
+                >
+                  项目名称
+                  <span class="text-danger"> * </span>
+                </label>
+                <input
+                  class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300"
+                  id="projectName"
+                  name="projectName"
+                  required
+                  type="text"
+                />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-500 mb-1">
+                  项目封面
+                  <span class="text-danger"> * </span>
+                </label>
+                <div
+                  class="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-primary transition-all-300 cursor-pointer bg-gray-50"
+                  id="coverImageContainer"
+                >
+                  <img
+                    alt="项目封面预览"
+                    class="max-w-full max-h-48 mx-auto mb-3 hidden"
+                    id="coverImagePreview"
+                    src
+                  />
+                  <i class="fas fa-cloud-upload text-3xl text-gray-400 mb-2">
+                  </i>
+                  <p class="text-sm text-gray-500">点击上传图片或拖拽至此处</p>
+                  <p class="text-xs text-gray-400 mt-1">
+                    支持 JPG、PNG 格式，最大 5MB
+                  </p>
+                  <input
+                    accept="image/jpeg, image/png"
+                    class="hidden"
+                    id="coverImageInput"
+                    type="file"
+                  />
+                </div>
+              </div>
+              <div class="md:col-span-2">
+                <label
+                  class="block text-sm font-medium text-gray-500 mb-1"
+                  for="projectDescription"
+                >
+                  项目简介
+                  <span class="text-danger"> * </span>
+                </label>
+                <textarea
+                  class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300 resize-none"
+                  id="projectDescription"
+                  name="projectDescription"
+                  required
+                  rows="4"
+                >
+                </textarea>
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-500 mb-1"
+                  for="targetAmount"
+                >
+                  目标金额（元）
+                  <span class="text-danger"> * </span>
+                </label>
+                <input
+                  class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300"
+                  id="targetAmount"
+                  min="0"
+                  name="targetAmount"
+                  required
+                  step="0.01"
+                  type="number"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-500 mb-1"
+                  for="beneficiary"
+                >
+                  受助对象说明
+                  <span class="text-danger"> * </span>
+                </label>
+                <input
+                  class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300"
+                  id="beneficiary"
+                  name="beneficiary"
+                  required
+                  type="text"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-500 mb-1"
+                  for="projectStatus"
+                >
+                  项目状态
+                  <span class="text-danger"> * </span>
+                </label>
+                <select
+                  class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300"
+                  id="projectStatus"
+                  name="projectStatus"
+                  required
+                >
+                  <option value="inProgress">进行中</option>
+                  <option value="completed">已结束</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-500 mb-1"
+                  for="organization"
+                >
+                  所属组织
+                  <span class="text-danger"> * </span>
+                </label>
+                <select
+                  class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all-300"
+                  id="organization"
+                  name="organization"
+                  required
+                >
+                  <option value="org1">爱心公益协会</option>
+                  <option value="org2">阳光慈善基金会</option>
+                  <option value="org3">温暖救助中心</option>
+                  <option value="org4">希望工程办公室</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div
+          class="p-6 border-t border-gray-100 flex items-center justify-end space-x-3"
+        >
+          <button
+            class="px-6 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-all-300"
+            id="cancelBtn"
+          >
+            取消
+          </button>
+          <button
+            class="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-all-300 shadow-sm hover:shadow"
+            id="saveBtn"
+          >
+            保存
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- [/MODULE] w2x_新增编辑项目弹窗 -- 包含项目表单，用于新增或编辑公益项目 -->
+    <!-- [MODULE] y3z_确认删除弹窗 -->
+    <div
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden"
+      id="confirmDeleteModal"
+    >
+      <div class="bg-white rounded-xl shadow-modal w-full max-w-md">
+        <div class="p-6 text-center">
+          <div
+            class="w-16 h-16 bg-danger-light rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <i class="fas fa-exclamation-triangle text-danger text-2xl"> </i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-700 mb-2">确认删除</h3>
+          <p class="text-gray-500 mb-6">
+            您确定要删除这个公益项目吗？此操作不可撤销。
+          </p>
+          <input id="deleteProjectId" type="hidden" />
+          <div class="flex items-center justify-center space-x-3">
+            <button
+              class="px-6 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-all-300"
+              id="cancelDeleteBtn"
+            >
+              取消
+            </button>
+            <button
+              class="px-6 py-2 bg-danger hover:bg-danger/90 text-white rounded-lg transition-all-300 shadow-sm hover:shadow"
+              id="confirmDeleteBtn"
+            >
+              确认删除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [/MODULE] y3z_确认删除弹窗 -- 用于确认是否删除公益项目 -->
+    <!-- [MODULE] a4b_上链同步弹窗 -->
+    <div
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden"
+      id="syncModal"
+    >
+      <div class="bg-white rounded-xl shadow-modal w-full max-w-md">
+        <div class="p-6 text-center">
+          <div
+            class="w-16 h-16 bg-primary-light rounded-full flex items-center justify-center mx-auto mb-4"
+          >
+            <i class="fas fa-link text-primary text-2xl"> </i>
+          </div>
+          <h3 class="text-xl font-bold text-gray-700 mb-2">上链同步</h3>
+          <p class="text-gray-500 mb-6">您确定要将此项目信息同步到区块链吗？</p>
+          <input id="syncProjectId" type="hidden" />
+          <div class="flex items-center justify-center space-x-3">
+            <button
+              class="px-6 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-all-300"
+              id="cancelSyncBtn"
+            >
+              取消
+            </button>
+            <button
+              class="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-all-300 shadow-sm hover:shadow"
+              id="confirmSyncBtn"
+            >
+              确认同步
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [/MODULE] a4b_上链同步弹窗 -- 用于确认是否将项目信息同步到区块链 -->
+    <!-- [JSMOD] c5d_页面初始化和事件绑定 -->
+    <script id="pageInitScript">
+      // 页面加载时初始化渲染
+              document.addEventListener('DOMContentLoaded', () => {
+                  initProjectTable();
+                  bindEventListeners();
+              });
+              // 项目数据
+              const projects = [
+                  {
+                      id: 1,
+                      name: "乡村教育支持计划",
+                      organization: "希望工程办公室",
+                      targetAmount: 500000,
+                      raisedAmount: 320000,
+                      status: "inProgress",
+                      createdAt: "2023-05-15",
+                      blockchainInfo: "已上链",
+                      blockHeight: 1258963
+                  },
+                  {
+                      id: 2,
+                      name: "贫困山区医疗援助",
+                      organization: "阳光慈善基金会",
+                      targetAmount: 300000,
+                      raisedAmount: 300000,
+                      status: "completed",
+                      createdAt: "2023-03-22",
+                      blockchainInfo: "已上链",
+                      blockHeight: 1245632
+                  },
+                  {
+                      id: 3,
+                      name: "留守儿童关爱行动",
+                      organization: "爱心公益协会",
+                      targetAmount: 200000,
+                      raisedAmount: 150000,
+                      status: "inProgress",
+                      createdAt: "2023-06-01",
+                      blockchainInfo: "已上链",
+                      blockHeight: 1260125
+                  },
+                  {
+                      id: 4,
+                      name: "残疾人就业培训",
+                      organization: "温暖救助中心",
+                      targetAmount: 150000,
+                      raisedAmount: 80000,
+                      status: "reviewing",
+                      createdAt: "2023-06-18",
+                      blockchainInfo: "待上链",
+                      blockHeight: ""
+                  },
+                  {
+                      id: 5,
+                      name: "环境保护志愿者招募",
+                      organization: "阳光慈善基金会",
+                      targetAmount: 100000,
+                      raisedAmount: 100000,
+                      status: "completed",
+                      createdAt: "2023-01-10",
+                      blockchainInfo: "已上链",
+                      blockHeight: 1230568
+                  },
+                  {
+                      id: 6,
+                      name: "流浪动物救助计划",
+                      organization: "爱心公益协会",
+                      targetAmount: 80000,
+                      raisedAmount: 65000,
+                      status: "inProgress",
+                      createdAt: "2023-04-05",
+                      blockchainInfo: "已上链",
+                      blockHeight: 1251245
+                  },
+                  {
+                      id: 7,
+                      name: "老年人关爱服务",
+                      organization: "温暖救助中心",
+                      targetAmount: 250000,
+                      raisedAmount: 180000,
+                      status: "inProgress",
+                      createdAt: "2023-02-28",
+                      blockchainInfo: "已上链",
+                      blockHeight: 1240125
+                  },
+                  {
+                      id: 8,
+                      name: "灾区重建支援",
+                      organization: "希望工程办公室",
+                      targetAmount: 1000000,
+                      raisedAmount: 750000,
+                      status: "inProgress",
+                      createdAt: "2023-04-25",
+                      blockchainInfo: "已上链",
+                      blockHeight: 1253698
+                  },
+                  {
+                      id: 9,
+                      name: "文化遗产保护项目",
+                      organization: "阳光慈善基金会",
+                      targetAmount: 400000,
+                      raisedAmount: 280000,
+                      status: "rejected",
+                      createdAt: "2023-06-05",
+                      blockchainInfo: "待上链",
+                      blockHeight: ""
+                  },
+                  {
+                      id: 10,
+                      name: "贫困学生奖学金",
+                      organization: "希望工程办公室",
+                      targetAmount: 350000,
+                      raisedAmount: 210000,
+                      status: "inProgress",
+                      createdAt: "2023-03-15",
+                      blockchainInfo: "已上链",
+                      blockHeight: 1243256
+                  }
+              ];
+              // 初始化项目表格
+              function initProjectTable() {
+                  const tableBody = document.getElementById('projectTableBody');
+                  tableBody.innerHTML = '';
+
+                  projects.forEach(project => {
+                      const row = document.createElement('tr');
+                      row.className = 'border-b border-gray-100 hover:bg-gray-50 transition-bg';
+
+                      // 计算进度百分比
+                      const progressPercentage = Math.round((project.raisedAmount / project.targetAmount) * 100);
+
+                      // 状态标签样式映射
+                      const statusStyles = {
+                          inProgress: { class: 'bg-primary-light text-primary', text: '进行中' },
+                          completed: { class: 'bg-success-light text-success', text: '已结束' },
+                          reviewing: { class: 'bg-warning-light text-warning', text: '审核中' },
+                          rejected: { class: 'bg-danger-light text-danger', text: '已驳回' }
+                      };
+
+                      row.innerHTML = `
+                          <td class="px-6 py-4">
+                              <div class="flex items-center">
+                                  <img src="./api/searchImage?query=charity project image, relevant to ${project.name}, positive and hopeful atmosphere, high quality photography&width=60&height=60" alt="${project.name}" class="w-10 h-10 rounded-lg object-cover mr-3">
+                                  <span class="font-medium">${project.name}</span>
+                              </div>
+                          </td>
+                          <td class="px-6 py-4">${getOrganizationName(project.organization)}</td>
+                          <td class="px-6 py-4">
+                              <div>
+                                  <div class="flex justify-between text-sm mb-1">
+                                      <span>¥${formatNumber(project.raisedAmount)}</span>
+                                      <span class="text-gray-500">/${formatNumber(project.targetAmount)}</span>
+                                  </div>
+                                  <div class="progress-bar bg-gray-100">
+                                      <div class="progress-value bg-primary" style="width: ${progressPercentage}%"></div>
+                                  </div>
+                                  <div class="text-right text-xs text-gray-500 mt-1">${progressPercentage}%</div>
+                              </div>
+                          </td>
+                          <td class="px-6 py-4">
+                              <span class="px-2 py-1 rounded-full text-xs font-medium ${statusStyles[project.status].class}">
+                                  ${statusStyles[project.status].text}
+                              </span>
+                          </td>
+                          <td class="px-6 py-4 text-gray-500">${project.createdAt}</td>
+                          <td class="px-6 py-4">
+                              <div>
+                                  <div class="text-sm">${project.blockchainInfo}</div>
+                                  ${project.blockchainInfo === '已上链' ? `<div class="text-xs text-gray-500">区块高度: ${project.blockHeight}</div>` : ''}
+                              </div>
+                          </td>
+                          <td class="px-6 py-4 text-right">
+                              <div class="flex items-center justify-end space-x-2">
+                                  <button class="view-btn text-gray-500 hover:text-primary transition-colors" data-id="${project.id}" title="查看">
+                                      <i class="fas fa-eye"></i>
+                                  </button>
+                                  <button class="edit-btn text-gray-500 hover:text-primary transition-colors" data-id="${project.id}" title="编辑">
+                                      <i class="fas fa-edit"></i>
+                                  </button>
+                                  <button class="delete-btn text-gray-500 hover:text-danger transition-colors" data-id="${project.id}" title="删除">
+                                      <i class="fas fa-trash-alt"></i>
+                                  </button>
+                                  ${project.blockchainInfo === '待上链' ? `
+                                      <button class="sync-btn text-gray-500 hover:text-primary transition-colors" data-id="${project.id}" title="上链同步">
+                                          <i class="fas fa-link"></i>
+                                      </button>
+                                  ` : ''}
+                              </div>
+                          </td>
+                      `;
+
+                      tableBody.appendChild(row);
+                  });
+
+                  // 绑定表格操作按钮事件
+                  bindTableActionEvents();
+              }
+              // 绑定事件监听器
+              function bindEventListeners() {
+                  // 模态框相关事件
+                  document.getElementById('addProjectBtn').addEventListener('click', () => openModal());
+                  document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+                  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+                  document.getElementById('saveBtn').addEventListener('click', saveProject);
+
+                  // 筛选查询相关事件
+                  document.getElementById('searchBtn').addEventListener('click', performSearch);
+                  document.getElementById('resetBtn').addEventListener('click', resetFilters);
+
+                  // 图片上传相关事件
+                  const coverImageContainer = document.getElementById('coverImageContainer');
+                  const coverImageInput = document.getElementById('coverImageInput');
+                  const coverImagePreview = document.getElementById('coverImagePreview');
+
+                  coverImageContainer.addEventListener('click', () => coverImageInput.click());
+
+                  coverImageInput.addEventListener('change', (e) => {
+                      if (e.target.files && e.target.files[0]) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                              coverImagePreview.src = event.target.result;
+                              coverImagePreview.classList.remove('hidden');
+                              coverImageContainer.classList.add('p-3');
+                              coverImageContainer.querySelector('i').classList.add('hidden');
+                              coverImageContainer.querySelector('p:first-of-type').classList.add('hidden');
+                              coverImageContainer.querySelector('p:last-of-type').classList.add('hidden');
+                          };
+                          reader.readAsDataURL(e.target.files[0]);
+                      }
+                  });
+
+                  // 确认删除相关事件
+                  document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+                  document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+
+                  // 上链同步相关事件
+                  document.getElementById('cancelSyncBtn').addEventListener('click', closeSyncModal);
+                  document.getElementById('confirmSyncBtn').addEventListener('click', confirmSync);
+              }
+              // 绑定表格操作按钮事件
+              function bindTableActionEvents() {
+                  // 查看按钮事件
+                  document.querySelectorAll('.view-btn').forEach(btn => {
+                      btn.addEventListener('click', (e) => {
+                          const projectId = parseInt(e.currentTarget.dataset.id);
+                          viewProject(projectId);
+                      });
+                  });
+
+                  // 编辑按钮事件
+                  document.querySelectorAll('.edit-btn').forEach(btn => {
+                      btn.addEventListener('click', (e) => {
+                          const projectId = parseInt(e.currentTarget.dataset.id);
+                          editProject(projectId);
+                      });
+                  });
+
+                  // 删除按钮事件
+                  document.querySelectorAll('.delete-btn').forEach(btn => {
+                      btn.addEventListener('click', (e) => {
+                          const projectId = parseInt(e.currentTarget.dataset.id);
+                          openDeleteModal(projectId);
+                      });
+                  });
+
+                  // 上链同步按钮事件
+                  document.querySelectorAll('.sync-btn').forEach(btn => {
+                      btn.addEventListener('click', (e) => {
+                          const projectId = parseInt(e.currentTarget.dataset.id);
+                          openSyncModal(projectId);
+                      });
+                  });
+              }
+              // 打开新增/编辑项目弹窗
+              function openModal(projectId = null) {
+                  const modal = document.getElementById('projectModal');
+                  const modalTitle = document.getElementById('modalTitle');
+                  const projectIdInput = document.getElementById('projectIdInput');
+                  const projectForm = document.getElementById('projectForm');
+
+                  // 重置表单
+                  projectForm.reset();
+                  document.getElementById('coverImagePreview').src = '';
+                  document.getElementById('coverImagePreview').classList.add('hidden');
+                  document.getElementById('coverImageContainer').classList.remove('p-3');
+                  document.getElementById('coverImageContainer').querySelector('i').classList.remove('hidden');
+                  document.getElementById('coverImageContainer').querySelector('p:first-of-type').classList.remove('hidden');
+                  document.getElementById('coverImageContainer').querySelector('p:last-of-type').classList.remove('hidden');
+
+                  if (projectId) {
+                      // 编辑模式
+                      modalTitle.textContent = '编辑公益项目';
+                      projectIdInput.value = projectId;
+
+                      const project = projects.find(p => p.id === projectId);
+                      if (project) {
+                          document.getElementById('projectName').value = project.name;
+                          document.getElementById('targetAmount').value = project.targetAmount;
+                          document.getElementById('raisedAmount')?.value = project.raisedAmount;
+                          document.getElementById('beneficiary').value = project.beneficiary;
+                          document.getElementById('projectStatus').value = project.status;
+                          document.getElementById('organization').value = project.organization;
+
+                          // 设置图片预览
+                          const coverImagePreview = document.getElementById('coverImagePreview');
+                          coverImagePreview.src = `./api/searchImage?query=charity project image, relevant to ${project.name}, positive and hopeful atmosphere, high quality photography&width=60&height=60`;
+                          coverImagePreview.classList.remove('hidden');
+                          document.getElementById('coverImageContainer').classList.add('p-3');
+                          document.getElementById('coverImageContainer').querySelector('i').classList.add('hidden');
+                          document.getElementById('coverImageContainer').querySelector('p:first-of-type').classList.add('hidden');
+                          document.getElementById('coverImageContainer').querySelector('p:last-of-type').classList.add('hidden');
+                      }
+                  } else {
+                      // 新增模式
+                      modalTitle.textContent = '新增公益项目';
+                      projectIdInput.value = '';
+                  }
+
+                  modal.classList.remove('hidden');
+                  modal.classList.add('animate-fadeIn');
+              }
+              // 关闭弹窗
+              function closeModal() {
+                  const modal = document.getElementById('projectModal');
+                  modal.classList.add('hidden');
+              }
+              // 保存项目
+              function saveProject() {
+                  const projectId = document.getElementById('projectIdInput').value;
+                  const projectName = document.getElementById('projectName').value;
+                  const targetAmount = parseFloat(document.getElementById('targetAmount').value);
+                  const beneficiary = document.getElementById('beneficiary').value;
+                  const projectStatus = document.getElementById('projectStatus').value;
+                  const organization = document.getElementById('organization').value;
+
+                  if (!projectName || !targetAmount || !beneficiary || !projectStatus || !organization) {
+                      alert('请填写所有必填字段');
+                      return;
+                  }
+
+                  if (projectId) {
+                      // 编辑现有项目
+                      const index = projects.findIndex(p => p.id === parseInt(projectId));
+                      if (index !== -1) {
+                          projects[index] = {
+                              ...projects[index],
+                              name: projectName,
+                              targetAmount: targetAmount,
+                              beneficiary: beneficiary,
+                              status: projectStatus,
+                              organization: organization
+                          };
+
+                          showNotification('项目更新成功');
+                      }
+                  } else {
+                      // 创建新项目
+                      const newProject = {
+                          id: projects.length > 0 ? Math.max(...projects.map(p => p.id)) + 1 : 1,
+                          name: projectName,
+                          organization: organization,
+                          targetAmount: targetAmount,
+                          raisedAmount: 0,
+                          status: projectStatus,
+                          createdAt: new Date().toISOString().split('T')[0],
+                          blockchainInfo: "待上链",
+                          blockHeight: ""
+                      };
+
+                      projects.unshift(newProject);
+                      showNotification('新项目创建成功');
+                  }
+
+                  // 刷新表格
+                  initProjectTable();
+
+                  // 关闭弹窗
+                  closeModal();
+              }
+              // 查看项目
+              function viewProject(projectId) {
+                  const project = projects.find(p => p.id === projectId);
+                  if (project) {
+                      alert(`查看项目: ${project.name}\n\n项目详情:\n组织: ${getOrganizationName(project.organization)}\n目标金额: ¥${formatNumber(project.targetAmount)}\n已筹金额: ¥${formatNumber(project.raisedAmount)}\n状态: ${getStatusText(project.status)}\n创建时间: ${project.createdAt}\n链上信息: ${project.blockchainInfo}${project.blockchainInfo === '已上链' ? ` (区块高度: ${project.blockHeight})` : ''}`);
+                  }
+              }
+              // 编辑项目
+              function editProject(projectId) {
+                  openModal(projectId);
+              }
+              // 打开删除确认弹窗
+              function openDeleteModal(projectId) {
+                  document.getElementById('deleteProjectId').value = projectId;
+                  document.getElementById('confirmDeleteModal').classList.remove('hidden');
+              }
+              // 关闭删除确认弹窗
+              function closeDeleteModal() {
+                  document.getElementById('confirmDeleteModal').classList.add('hidden');
+              }
+              // 确认删除项目
+              function confirmDelete() {
+                  const projectId = parseInt(document.getElementById('deleteProjectId').value);
+                  const index = projects.findIndex(p => p.id === projectId);
+
+                  if (index !== -1) {
+                      projects.splice(index, 1);
+                      initProjectTable();
+                      showNotification('项目已删除');
+                  }
+
+                  closeDeleteModal();
+              }
+              // 打开上链同步弹窗
+              function openSyncModal(projectId) {
+                  document.getElementById('syncProjectId').value = projectId;
+                  document.getElementById('syncModal').classList.remove('hidden');
+              }
+              // 关闭上链同步弹窗
+              function closeSyncModal() {
+                  document.getElementById('syncModal').classList.add('hidden');
+              }
+              // 确认上链同步
+              function confirmSync() {
+                  const projectId = parseInt(document.getElementById('syncProjectId').value);
+                  const index = projects.findIndex(p => p.id === projectId);
+
+                  if (index !== -1) {
+                      // 模拟上链同步
+                      projects[index].blockchainInfo = "已上链";
+                      projects[index].blockHeight = Math.floor(Math.random() * 100000) + 1200000;
+                      initProjectTable();
+                      showNotification('项目已成功同步到区块链');
+                  }
+
+                  closeSyncModal();
+              }
+              // 执行搜索
+              function performSearch() {
+                  const projectName = document.getElementById('projectNameInput').value.toLowerCase();
+                  const projectStatus = document.getElementById('projectStatusSelect').value;
+
+                  // 这里只是模拟搜索，实际应用中应该是发送请求到后端
+                  const filteredProjects = projects.filter(project => {
+                      const nameMatch = projectName ? project.name.toLowerCase().includes(projectName) : true;
+                      const statusMatch = projectStatus ? project.status === projectStatus : true;
+                      return nameMatch && statusMatch;
+                  });
+
+                  // 更新表格显示
+                  updateTableWithFilteredProjects(filteredProjects);
+
+                  // 显示搜索结果统计
+                  document.getElementById('totalItems').textContent = filteredProjects.length;
+                  document.getElementById('pageRange').textContent = filteredProjects.length > 0 ? `1-${Math.min(filteredProjects.length, 10)}` : '0-0';
+
+                  showNotification(`找到 ${filteredProjects.length} 个匹配项目`);
+              }
+              // 重置筛选条件
+              function resetFilters() {
+                  document.getElementById('projectNameInput').value = '';
+                  document.getElementById('projectStatusSelect').value = '';
+                  document.getElementById('organizationSelect').value = '';
+                  document.getElementById('dateRangePicker').value = '';
+
+                  // 重置表格显示所有项目
+                  initProjectTable();
+
+                  // 重置统计显示
+                  document.getElementById('totalItems').textContent = projects.length;
+                  document.getElementById('pageRange').textContent = projects.length > 0 ? `1-${Math.min(projects.length, 10)}` : '0-0';
+              }
+              // 更新表格显示筛选后的项目
+              function updateTableWithFilteredProjects(filteredProjects) {
+                  const tableBody = document.getElementById('projectTableBody');
+                  tableBody.innerHTML = '';
+
+                  if (filteredProjects.length === 0) {
+                      const emptyRow = document.createElement('tr');
+                      emptyRow.innerHTML = `
+                          <td colspan="7" class="px-6 py-12 text-center">
+                              <div class="flex flex-col items-center">
+                                  <i class="fas fa-search text-gray-300 text-4xl mb-3"></i>
+                                  <p class="text-gray-500">没有找到匹配的项目</p>
+                                  <button id="resetFromEmptyBtn" class="mt-3 text-primary hover:text-primary/80">重置筛选条件</button>
+                              </div>
+                          </td>
+                      `;
+                      tableBody.appendChild(emptyRow);
+
+                      // 绑定重置按钮事件
+                      document.getElementById('resetFromEmptyBtn').addEventListener('click', resetFilters);
+                      return;
+                  }
+
+                  filteredProjects.forEach(project => {
+                      const row = document.createElement('tr');
+                      row.className = 'border-b border-gray-100 hover:bg-gray-50 transition-bg';
+
+                      // 计算进度百分比
+                      const progressPercentage = Math.round((project.raisedAmount / project.targetAmount) * 100);
+
+                      // 状态标签样式映射
+                      const statusStyles = {
+                          inProgress: { class: 'bg-primary-light text-primary', text: '进行中' },
+                          completed: { class: 'bg-success-light text-success', text: '已结束' },
+                          reviewing: { class: 'bg-warning-light text-warning', text: '审核中' },
+                          rejected: { class: 'bg-danger-light text-danger', text: '已驳回' }
+                      };
+
+                      row.innerHTML = `
+                          <td class="px-6 py-4">
+                              <div class="flex items-center">
+                                  <img src="./api/searchImage?query=charity project image, relevant to ${project.name}, positive and hopeful atmosphere, high quality photography&width=60&height=60" alt="${project.name}" class="w-10 h-10 rounded-lg object-cover mr-3">
+                                  <span class="font-medium">${project.name}</span>
+                              </div>
+                          </td>
+                          <td class="px-6 py-4">${getOrganizationName(project.organization)}</td>
+                          <td class="px-6 py-4">
+                              <div>
+                                  <div class="flex justify-between text-sm mb-1">
+                                      <span>¥${formatNumber(project.raisedAmount)}</span>
+                                      <span class="text-gray-500">/${formatNumber(project.targetAmount)}</span>
+                                  </div>
+                                  <div class="progress-bar bg-gray-100">
+                                      <div class="progress-value bg-primary" style="width: ${progressPercentage}%"></div>
+                                  </div>
+                                  <div class="text-right text-xs text-gray-500 mt-1">${progressPercentage}%</div>
+                              </div>
+                          </td>
+                          <td class="px-6 py-4">
+                              <span class="px-2 py-1 rounded-full text-xs font-medium ${statusStyles[project.status].class}">
+                                  ${statusStyles[project.status].text}
+                              </span>
+                          </td>
+                          <td class="px-6 py-4 text-gray-500">${project.createdAt}</td>
+                          <td class="px-6 py-4">
+                              <div>
+                                  <div class="text-sm">${project.blockchainInfo}</div>
+                                  ${project.blockchainInfo === '已上链' ? `<div class="text-xs text-gray-500">区块高度: ${project.blockHeight}</div>` : ''}
+                              </div>
+                          </td>
+                          <td class="px-6 py-4 text-right">
+                              <div class="flex items-center justify-end space-x-2">
+                                  <button class="view-btn text-gray-500 hover:text-primary transition-colors" data-id="${project.id}" title="查看">
+                                      <i class="fas fa-eye"></i>
+                                  </button>
+                                  <button class="edit-btn text-gray-500 hover:text-primary transition-colors" data-id="${project.id}" title="编辑">
+                                      <i class="fas fa-edit"></i>
+                                  </button>
+                                  <button class="delete-btn text-gray-500 hover:text-danger transition-colors" data-id="${project.id}" title="删除">
+                                      <i class="fas fa-trash-alt"></i>
+                                  </button>
+                                  ${project.blockchainInfo === '待上链' ? `
+                                      <button class="sync-btn text-gray-500 hover:text-primary transition-colors" data-id="${project.id}" title="上链同步">
+                                          <i class="fas fa-link"></i>
+                                      </button>
+                                  ` : ''}
+                              </div>
+                          </td>
+                      `;
+
+                      tableBody.appendChild(row);
+                  });
+
+                  // 绑定表格操作按钮事件
+                  bindTableActionEvents();
+              }
+              // 显示通知
+              function showNotification(message) {
+                  // 检查是否已有通知
+                  let notification = document.getElementById('notification');
+
+                  if (!notification) {
+                      notification = document.createElement('div');
+                      notification.id = 'notification';
+                      notification.className = 'fixed bottom-5 right-5 bg-white shadow-lg rounded-lg p-4 flex items-center z-50 transform translate-y-20 opacity-0 transition-all duration-300 max-w-sm';
+                      notification.innerHTML = `
+                          <i class="fas fa-check-circle text-success text-xl mr-3"></i>
+                          <p id="notificationMessage" class="text-gray-700"></p>
+                      `;
+                      document.body.appendChild(notification);
+                  }
+
+                  // 设置通知内容
+                  document.getElementById('notificationMessage').textContent = message;
+
+                  // 显示通知
+                  notification.classList.remove('translate-y-20', 'opacity-0');
+                  notification.classList.add('translate-y-0', 'opacity-100');
+
+                  // 3秒后隐藏通知
+                  setTimeout(() => {
+                      notification.classList.remove('translate-y-0', 'opacity-100');
+                      notification.classList.add('translate-y-20', 'opacity-0');
+                  }, 3000);
+              }
+              // 工具函数：格式化数字为带千分位的格式
+              function formatNumber(num) {
+                  return num.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+              }
+              // 工具函数：获取组织名称
+              function getOrganizationName(organizationCode) {
+                  const organizations = {
+                      'org1': '爱心公益协会',
+                      'org2': '阳光慈善基金会',
+                      'org3': '温暖救助中心',
+                      'org4': '希望工程办公室'
+                  };
+
+                  return organizations[organizationCode] || organizationCode;
+              }
+              // 工具函数：获取状态文本
+              function getStatusText(statusCode) {
+                  const statusMap = {
+                      'inProgress': '进行中',
+                      'completed': '已结束',
+                      'reviewing': '审核中',
+                      'rejected': '已驳回'
+                  };
+
+                  return statusMap[statusCode] || statusCode;
+              }
+    </script>
+    <!-- [/JSMOD] c5d_页面初始化和事件绑定 -->
+    <!-- [JSMOD] sys_management_js_系统管理页面交互逻辑 -->
+    <script id="sysManagementScript">
+      document.addEventListener('DOMContentLoaded', function () {
+        // 导航项点击事件
+        var navItems = document.querySelectorAll('.sys-nav-item');
+        var contentAreas = document.querySelectorAll('.sys-content-area');
+        navItems.forEach(function (item) {
+          item.addEventListener('click', function () {
+            // 移除所有导航项的激活状态
+            navItems.forEach(function (nav) {
+              nav.classList.remove('bg-primary-light', 'text-primary');
+              nav.classList.add('hover:bg-gray-100', 'text-gray-700');
+            });
+
+            // 添加当前导航项的激活状态
+            this.classList.remove('hover:bg-gray-100', 'text-gray-700');
+            this.classList.add('bg-primary-light', 'text-primary');
+
+            // 隐藏所有内容区域
+            var targetId = this.getAttribute('data-target');
+            contentAreas.forEach(function (area) {
+              area.classList.add('hidden');
+            });
+
+            // 显示目标内容区域
+            document.getElementById(targetId).classList.remove('hidden');
+          });
+        });
+
+        // 新增用户按钮点击事件
+        document.getElementById('addUserBtn').addEventListener('click', function () {
+          alert('新增用户功能将在弹窗中打开');
+          // 实际项目中这里应该打开新增用户的模态框
+        });
+
+        // 批量导入按钮点击事件
+        document.getElementById('batchImportBtn').addEventListener('click', function () {
+          alert('批量导入功能将在弹窗中打开');
+          // 实际项目中这里应该打开批量导入的模态框
+        });
+      });
+    </script>
+  </body>
+</html>

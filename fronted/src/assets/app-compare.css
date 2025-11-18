@@ -1,0 +1,173 @@
+/* 所有样式都挂到 .qimai-app-compare 命名空间下，避免全局污染 */
+.qimai-app-compare {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.qimai-app-compare .header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.qimai-app-compare .main-title { font-size: 32px; font-weight: 600; margin: 0 0 20px 0; }
+.qimai-app-compare .sub-header h2 { font-size: 24px; font-weight: 500; margin: 0 0 8px 0; }
+.qimai-app-compare .sub-header p { font-size: 16px; opacity: 0.9; margin: 0; }
+
+.qimai-app-compare .filter-bar {
+  background: white; padding: 20px; display: flex; align-items: center; gap: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-wrap: wrap;
+}
+
+.qimai-app-compare .region-filters,
+.qimai-app-compare .platform-filters { display: flex; gap: 8px; }
+
+.qimai-app-compare .filter-btn {
+  padding: 8px 16px; border: 1px solid #e0e0e0; background: white; color: #666;
+  border-radius: 4px; cursor: pointer; transition: all 0.2s;
+}
+.qimai-app-compare .filter-btn.active { background: #007aff; color: white; border-color: #007aff; }
+.qimai-app-compare .filter-btn:hover { background: #f0f0f0; }
+.qimai-app-compare .filter-btn.active:hover { background: #0056cc; }
+
+.qimai-app-compare .time-filter select {
+  padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 4px; background: white;
+}
+
+.qimai-app-compare .export-button {
+  padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: auto;
+}
+.qimai-app-compare .export-button:hover { background: #218838; }
+
+.qimai-app-compare .compare-apps-section {
+  background: white; margin: 20px; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.qimai-app-compare .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.qimai-app-compare .section-header h3 { margin: 0; font-size: 18px; font-weight: 600; color: #333; }
+
+.qimai-app-compare .add-app-button {
+  padding: 8px 16px; border: 1px dashed #007aff; background: white; color: #007aff; border-radius: 4px; cursor: pointer;
+}
+.qimai-app-compare .add-app-button:hover { background: #f0f8ff; }
+
+.qimai-app-compare .apps-list { display: flex; gap: 20px; flex-wrap: wrap; }
+
+.qimai-app-compare .app-item {
+  display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid #e0e0e0;
+  border-radius: 8px; background: #fafafa; min-width: 200px;
+}
+
+.qimai-app-compare .app-icon { width: 48px; height: 48px; border-radius: 12px; background-size: cover; background-position: center; }
+.qimai-app-compare .wechat-icon { background: linear-gradient(135deg, #07c160 0%, #06ad5b 100%); }
+.qimai-app-compare .alipay-icon { background: linear-gradient(135deg, #1677ff 0%, #0d5fbf 100%); }
+.qimai-app-compare .taobao-icon { background: linear-gradient(135deg, #ff6a00 0%, #cc5500 100%); }
+
+.qimai-app-compare .app-details { flex: 1; }
+.qimai-app-compare .app-name { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 4px; }
+.qimai-app-compare .app-subtitle { font-size: 14px; color: #666; }
+
+.qimai-app-compare .comparison-content {
+  background: white; margin: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;
+}
+
+.qimai-app-compare .tabs-navigation { display: flex; border-bottom: 1px solid #e0e0e0; }
+
+.qimai-app-compare .tab-button {
+  padding: 16px 24px; border: none; background: white; color: #666; cursor: pointer; font-size: 14px;
+  border-bottom: 3px solid transparent; transition: all 0.2s;
+}
+.qimai-app-compare .tab-button.active { color: #007aff; border-bottom-color: #007aff; background: #f8f9fa; }
+.qimai-app-compare .tab-button:hover { background: #f8f9fa; }
+
+.qimai-app-compare .content-panel { display: block; padding: 20px; }
+.qimai-app-compare .content-panel.active { /* no-op, handled by v-show */ }
+
+.qimai-app-compare .comparison-table { width: 100%; border-collapse: collapse; margin-top: 0; }
+.qimai-app-compare .comparison-table th,
+.qimai-app-compare .comparison-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+.qimai-app-compare .comparison-table th {
+  background: #f8f9fa; font-weight: 600; color: #333; position: sticky; top: 0;
+}
+
+.qimai-app-compare .info-category { background: #f0f0f0 !important; font-weight: 600; width: 120px; }
+.qimai-app-compare .category-cell { background: #f8f9fa; font-weight: 500; color: #333; }
+.qimai-app-compare .data-cell { color: #666; }
+.qimai-app-compare .app-column { width: 200px; }
+
+.qimai-app-compare .rating-section {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;
+}
+
+.qimai-app-compare .rating-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; background: #fafafa; }
+.qimai-app-compare .rating-card h4 { margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #333; }
+
+.qimai-app-compare .rating-overview { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; }
+.qimai-app-compare .rating-score { font-size: 36px; font-weight: 700; color: #007aff; }
+.qimai-app-compare .rating-count { font-size: 14px; color: #666; }
+
+.qimai-app-compare .rating-breakdown { display: flex; flex-direction: column; gap: 8px; }
+.qimai-app-compare .rating-row { display: flex; align-items: center; gap: 12px; }
+.qimai-app-compare .star-label { width: 40px; font-size: 14px; color: #666; }
+
+.qimai-app-compare .rating-bar { flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+.qimai-app-compare .rating-fill { height: 100%; background: #007aff; border-radius: 4px; transition: width 0.3s ease; }
+.qimai-app-compare .rating-percent { width: 40px; text-align: right; font-size: 14px; color: #666; }
+
+.qimai-app-compare .chart-section { margin-bottom: 40px; }
+.qimai-app-compare .chart-section:last-child { margin-bottom: 0; }
+.qimai-app-compare .chart-section h3 { margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #333; }
+
+.qimai-app-compare .chart-controls,
+.qimai-app-compare .ranking-controls { margin-bottom: 20px; }
+
+.qimai-app-compare .ranking-controls { display: flex; flex-direction: column; gap: 12px; }
+.qimai-app-compare .ranking-categories,
+.qimai-app-compare .ranking-periods { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.qimai-app-compare .chart-btn,
+.qimai-app-compare .ranking-btn,
+.qimai-app-compare .period-btn {
+  padding: 8px 16px; border: 1px solid #e0e0e0; background: white; color: #666;
+  border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s;
+}
+.qimai-app-compare .chart-btn.active,
+.qimai-app-compare .ranking-btn.active,
+.qimai-app-compare .period-btn.active {
+  background: #007aff; color: white; border-color: #007aff;
+}
+.qimai-app-compare .chart-btn:hover,
+.qimai-app-compare .ranking-btn:hover,
+.qimai-app-compare .period-btn:hover { background: #f0f0f0; }
+.qimai-app-compare .chart-btn.active:hover,
+.qimai-app-compare .ranking-btn.active:hover,
+.qimai-app-compare .period-btn.active:hover { background: #0056cc; }
+
+.qimai-app-compare .chart-container {
+  border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;
+}
+.qimai-app-compare .chart-placeholder {
+  height: 300px; display: flex; align-items: center; justify-content: center;
+  background: #f8f9fa; color: #999; font-size: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .qimai-app-compare .header { padding: 30px 15px; }
+  .qimai-app-compare .main-title { font-size: 24px; }
+  .qimai-app-compare .sub-header h2 { font-size: 20px; }
+
+  .qimai-app-compare .filter-bar { flex-direction: column; align-items: stretch; gap: 15px; }
+  .qimai-app-compare .export-button { margin-left: 0; }
+
+  .qimai-app-compare .comparison-content { margin: 15px; }
+  .qimai-app-compare .tabs-navigation { flex-wrap: wrap; }
+  .qimai-app-compare .tab-button { flex: 1; min-width: 0; padding: 12px 8px; font-size: 13px; }
+
+  .qimai-app-compare .rating-section { grid-template-columns: 1fr; }
+  .qimai-app-compare .comparison-table { font-size: 14px; }
+  .qimai-app-compare .comparison-table th,
+  .qimai-app-compare .comparison-table td { padding: 8px 12px; }
+}

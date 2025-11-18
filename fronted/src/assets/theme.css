@@ -1,0 +1,7 @@
+:root{
+  --card-radius: 12px;
+  --card-shadow: 0 6px 18px rgba(0,0,0,.06);
+}
+body { background: #F7F8FA; }
+.card { background:#fff; border-radius: var(--card-radius); box-shadow: var(--card-shadow); }
+.card-head { display:flex; align-items:center; justify-content:space-between; }

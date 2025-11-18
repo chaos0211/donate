@@ -1,0 +1,56 @@
+services:
+  hive-metastore:
+    platform: linux/arm64
+    build: .
+    image: hive-metastore-arm64:3.1.3-hadoop
+    container_name: hive-metastore
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      HIVE_HOME: /opt/hive
+      HADOOP_HOME: /opt/hadoop
+      HADOOP_COMMON_LIB_NATIVE_DIR: /usr/lib/aarch64-linux-gnu
+      LD_LIBRARY_PATH: /usr/lib/aarch64-linux-gnu:/opt/hadoop/lib/native:$LD_LIBRARY_PATH
+      HADOOP_OPTS: "-Djava.library.path=/usr/lib/aarch64-linux-gnu:/opt/hadoop/lib/native"
+      HIVE_AUX_JARS_PATH: "/opt/hive/lib:/opt/hive/auxlib"
+      # The following variables are informational; actual DB connection is defined in hive-site.xml
+      METASTORE_DB_HOST: host.docker.internal
+      METASTORE_DB_PORT: "33309"
+      METASTORE_DB_NAME: hive
+      METASTORE_DB_USER: root
+      METASTORE_DB_PASS: 123456
+      # Scratch / warehouse locations (also reflected in hive-site.xml)
+      HIVE_EXEC_SCRATCHDIR: "file:/tmp/hive/scratch"
+      HIVE_LOCAL_SCRATCHDIR: "/tmp/hive/local_scratch"
+      HIVE_WAREHOUSE_DIR: "file:/tmp/hive/warehouse"
+    ports:
+      - "9083:9083"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    volumes:
+      - ./conf/hive-site.xml:/opt/hive/conf/hive-site.xml:ro
+      - ./mysql-connector-j-8.0.33.jar:/opt/hive/lib/mysql-connector-j.jar:ro
+      - /Users/chaos/data/hive_tmp:/tmp/hive
+      - /Users/chaos/data/lake:/lake
+      - /etc/localtime:/etc/localtime:ro
+    command:
+      - /bin/bash
+      - -lc
+      - |
+        set -euo pipefail
+        apt-get update -qq
+        DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libsnappy1v5 libsnappy-dev netcat-openbsd >/dev/null 2>&1 || true
+        mkdir -p /tmp/hive/scratch /tmp/hive/local_scratch /tmp/hive/warehouse
+        chmod -R 777 /tmp/hive
+        # ensure snappy symlink exists on arm64
+        test -e /usr/lib/aarch64-linux-gnu/libsnappy.so || ln -s /usr/lib/aarch64-linux-gnu/libsnappy.so.1 /usr/lib/aarch64-linux-gnu/libsnappy.so || true
+        echo "Starting Hive Metastore on 9083..."
+        exec /opt/hive/bin/hive --service metastore -p 9083
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 9083"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
