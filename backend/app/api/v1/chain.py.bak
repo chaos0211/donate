@@ -1,0 +1,149 @@
+from fastapi import APIRouter, HTTPException, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.services.blockchain import BlockchainService
+from app.db.base import get_session as get_db
+from app.schemas.blockchain import (
+    ChainInfoResponse,
+    DonateRequest,
+    DonateResponse,
+    BlocksResponse,
+    BlockDetail,
+    TxByDonateResponse,
+    BlockSummary,
+    ChainTransactionInfo,
+)
+
+router = APIRouter(prefix="/api/v1/chain", tags=["chain"])
+
+
+@router.get("/info", response_model=ChainInfoResponse)
+async def get_chain_info(db: AsyncSession = Depends(get_db)):
+    """获取链的整体状态信息（基于数据库 Block / ChainTransaction）"""
+    chain_info = await BlockchainService.get_chain_info(db)
+    return ChainInfoResponse(**chain_info)
+
+
+@router.post("/tx/donate", response_model=DonateResponse)
+async def donate_to_chain(
+    request: DonateRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """捐赠上链：写入 Block / ChainTransaction 两张表"""
+    try:
+        # 添加捐赠到区块链
+        block, transaction = await BlockchainService.add_donation_to_chain(
+            db=db,
+            project_id=request.project_id,
+            amount=request.amount,
+            donor_username=request.donor_username,
+            remark=request.remark,
+            external_donate_id=request.external_donate_id,
+        )
+
+        # 获取最新链信息用于响应
+        chain_info = await BlockchainService.get_chain_info(db)
+
+        return DonateResponse(
+            block_height=block.height,
+            block_hash=block.block_hash,
+            tx_id=transaction.id,
+            tx_hash=transaction.tx_hash,
+            chain_height=chain_info["height"],
+            total_txs=chain_info["total_txs"],
+            total_amount=chain_info["total_amount"],
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"上链失败: {str(e)}")
+
+
+@router.get("/blocks", response_model=BlocksResponse)
+async def get_blocks(
+    offset: int = Query(0, ge=0, description="偏移量"),
+    limit: int = Query(10, ge=1, le=100, description="每页数量"),
+    db: AsyncSession = Depends(get_db),
+):
+    """分页查询区块列表（从 blocks 表读取）"""
+    total, blocks = await BlockchainService.get_blocks_paginated(db, offset, limit)
+
+    items: list[BlockSummary] = []
+    for block in blocks:
+        items.append(
+            BlockSummary(
+                height=block.height,
+                block_hash=block.block_hash,
+                prev_hash=block.prev_hash,
+                timestamp=block.timestamp,
+                tx_count=block.tx_count,
+                total_amount_in_block=block.total_amount_in_block,
+                project_ids=block.project_id_summary,
+                meta=block.raw_metadata,
+            )
+        )
+
+    return BlocksResponse(
+        total=total,
+        offset=offset,
+        limit=limit,
+        items=items,
+    )
+
+
+@router.get("/blocks/{height}", response_model=BlockDetail)
+async def get_block_detail(
+    height: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """根据高度查询区块详情（含该区块里的交易列表）"""
+    block = await BlockchainService.get_block_by_height(db, height)
+    if not block:
+        raise HTTPException(status_code=404, detail=f"区块高度 {height} 不存在")
+
+    txs: list[ChainTransactionInfo] = []
+    for tx in block.transactions:
+        txs.append(
+            ChainTransactionInfo(
+                id=tx.id,
+                project_id=tx.project_id,
+                donor_username=tx.donor_username,
+                amount=tx.amount,
+                remark=tx.remark,
+                tx_hash=tx.tx_hash,
+                tx_index=tx.tx_index,
+                timestamp=tx.timestamp,
+                external_donate_id=tx.external_donate_id,
+            )
+        )
+
+    return BlockDetail(
+        height=block.height,
+        block_hash=block.block_hash,
+        prev_hash=block.prev_hash,
+        timestamp=block.timestamp,
+        tx_count=block.tx_count,
+        total_amount_in_block=block.total_amount_in_block,
+        meta=block.raw_metadata,
+        txs=txs,
+    )
+
+
+@router.get("/tx/by-donate/{donate_id}", response_model=TxByDonateResponse)
+async def get_transaction_by_donate_id(
+    donate_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """通过业务侧捐赠ID查询上链状态（从 chain_txs 表查）"""
+    transaction = await BlockchainService.get_transaction_by_donate_id(db, donate_id)
+
+    if not transaction:
+        return TxByDonateResponse(found=False)
+
+    return TxByDonateResponse(
+        found=True,
+        block_height=transaction.block.height,
+        tx_hash=transaction.tx_hash,
+        tx_id=transaction.id,
+        amount=transaction.amount,
+        timestamp=transaction.timestamp,
+    )

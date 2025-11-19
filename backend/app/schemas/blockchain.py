@@ -1,82 +1,41 @@
-# schemas/blockchain.py
-from datetime import datetime
-from decimal import Decimal
-from typing import List, Optional, Any
 from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional, List, Dict, Any
 
-class ChainInfoResponse(BaseModel):
-    """链信息响应"""
-    height: int = Field(description="当前区块高度")
-    blocks: int = Field(description="区块总数")
-    total_txs: int = Field(description="链上捐赠总笔数")
-    total_amount: Decimal = Field(description="链上捐赠总金额")
-    latest_hash: Optional[str] = Field(description="最新区块哈希")
-    latest_timestamp: Optional[datetime] = Field(description="最新区块时间")
 
-class DonateRequest(BaseModel):
-    """捐赠上链请求"""
-    project_id: int = Field(description="公益项目ID")
-    amount: Decimal = Field(gt=0, description="捐赠金额")
-    donor_username: Optional[str] = Field(None, description="捐赠者用户名")
-    remark: Optional[str] = Field(None, max_length=500, description="备注")
-    external_donate_id: Optional[int] = Field(None, description="关联业务侧捐赠记录ID")
+class BlockBase(BaseModel):
+    index: int = Field(..., description="区块索引")
+    data: str = Field(..., description="区块数据")
+    previous_hash: str = Field(..., description="前一个区块的哈希值")
+    difficulty: int = Field(default=4, description="挖矿难度")
 
-class DonateResponse(BaseModel):
-    """捐赠上链响应"""
-    block_height: int = Field(description="区块高度")
-    block_hash: str = Field(description="区块哈希")
-    tx_id: int = Field(description="交易ID")
-    tx_hash: str = Field(description="交易哈希")
-    chain_height: int = Field(description="当前链高度")
-    total_txs: int = Field(description="链上总交易数")
-    total_amount: Decimal = Field(description="链上总金额")
 
-class ChainTransactionInfo(BaseModel):
-    """链上交易信息"""
+class BlockCreate(BlockBase):
+    pass
+
+
+class BlockResponse(BlockBase):
     id: int
-    project_id: int
-    donor_username: Optional[str]
-    amount: Decimal
-    remark: Optional[str]
-    tx_hash: str
-    tx_index: int
-    timestamp: datetime
-    external_donate_id: Optional[int]
+    hash: str = Field(..., description="当前区块哈希值")
+    nonce: int = Field(..., description="随机数")
+    timestamp: datetime = Field(..., description="区块创建时间")
 
-class BlockSummary(BaseModel):
-    """区块摘要"""
-    height: int
-    block_hash: str
-    prev_hash: Optional[str]
-    timestamp: datetime
-    tx_count: int
-    total_amount_in_block: Decimal
-    project_ids: Optional[str]
-    meta: Optional[Any]
+    class Config:
+        from_attributes = True
 
-class BlocksResponse(BaseModel):
-    """区块列表响应"""
-    total: int
-    offset: int
-    limit: int
-    items: List[BlockSummary]
 
-class BlockDetail(BaseModel):
-    """区块详情"""
-    height: int
-    block_hash: str
-    prev_hash: Optional[str]
-    timestamp: datetime
-    tx_count: int
-    total_amount_in_block: Decimal
-    meta: Optional[Any]
-    txs: List[ChainTransactionInfo]
+class BlockchainInfo(BaseModel):
+    total_blocks: int = Field(..., description="总区块数")
+    latest_block_hash: str = Field(..., description="最新区块哈希")
+    total_transactions: int = Field(..., description="总交易数")
+    chain_validity: bool = Field(..., description="区块链是否有效")
 
-class TxByDonateResponse(BaseModel):
-    """通过捐赠ID查询交易响应"""
-    found: bool
-    block_height: Optional[int]
-    tx_hash: Optional[str]
-    tx_id: Optional[int]
-    amount: Optional[Decimal]
-    timestamp: Optional[datetime]
+
+class TransactionData(BaseModel):
+    donation_id: int = Field(..., description="捐赠ID")
+    donor_name: str = Field(..., description="捐赠者姓名")
+    recipient: str = Field(..., description="受赠者")
+    amount: float = Field(..., description="捐赠金额")
+    currency: str = Field(default="CNY", description="货币类型")
+    message: Optional[str] = Field(None, description="捐赠留言")
+    timestamp: datetime = Field(..., description="交易时间")

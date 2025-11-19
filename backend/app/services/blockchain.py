@@ -1,173 +1,182 @@
-# services/blockchain.py
 import hashlib
 import json
 from datetime import datetime
-from decimal import Decimal
-from typing import Optional, Tuple, List
-from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
-
-from app.db.models.blockchain import Block, ChainTransaction
+from typing import List, Optional, Dict, Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, desc, func, and_
+from app.db.models.bc import Block
+from app.schemas.bc import BlockResponse, BlockchainInfo, TransactionData
+import asyncio
 
 
 class BlockchainService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
 
     @staticmethod
-    def generate_hash(content: str) -> str:
-        """生成SHA256哈希"""
-        return hashlib.sha256(content.encode('utf-8')).hexdigest()
+    def calculate_hash(index: int, timestamp: str, data: str, previous_hash: str, nonce: int = 0) -> str:
+        """计算区块哈希值"""
+        value = f"{index}{timestamp}{data}{previous_hash}{nonce}"
+        return hashlib.sha256(value.encode()).hexdigest()
 
     @staticmethod
-    def get_chain_info(db: Session) -> dict:
-        """获取链信息"""
-        # 查询最新区块
-        latest_block = db.query(Block).order_by(desc(Block.height)).first()
+    def is_valid_proof(index: int, timestamp: str, data: str, previous_hash: str, nonce: int, difficulty: int) -> bool:
+        """验证工作量证明"""
+        hash_value = BlockchainService.calculate_hash(index, timestamp, data, previous_hash, nonce)
+        return hash_value.startswith("0" * difficulty)
 
-        # 统计区块总数
-        blocks_count = db.query(Block).count()
+    @staticmethod
+    def mine_block(index: int, timestamp: str, data: str, previous_hash: str, difficulty: int = 4) -> tuple[str, int]:
+        """挖矿 - 寻找满足难度要求的随机数"""
+        nonce = 0
+        while True:
+            hash_value = BlockchainService.calculate_hash(index, timestamp, data, previous_hash, nonce)
+            if hash_value.startswith("0" * difficulty):
+                return hash_value, nonce
+            nonce += 1
 
-        # 统计交易总数和总金额
-        stats = db.query(
-            func.count(ChainTransaction.id).label('total_txs'),
-            func.sum(ChainTransaction.amount).label('total_amount')
-        ).first()
+    async def get_latest_block(self) -> Optional[Block]:
+        """获取最新区块"""
+        result = await self.db.execute(
+            select(Block).order_by(desc(Block.index)).limit(1)
+        )
+        return result.scalar_one_or_none()
 
-        return {
-            "height": latest_block.height if latest_block else 0,
-            "blocks": blocks_count,
-            "total_txs": stats.total_txs or 0,
-            "total_amount": stats.total_amount or Decimal('0.00'),
-            "latest_hash": latest_block.block_hash if latest_block else None,
-            "latest_timestamp": latest_block.timestamp if latest_block else None
+    async def get_block_by_hash(self, block_hash: str) -> Optional[Block]:
+        """根据哈希值获取区块"""
+        result = await self.db.execute(
+            select(Block).where(Block.hash == block_hash)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_blocks(self, limit: int = 10, offset: int = 0) -> List[Block]:
+        """获取区块列表"""
+        result = await self.db.execute(
+            select(Block).order_by(desc(Block.index)).limit(limit).offset(offset)
+        )
+        return result.scalars().all()
+
+    async def create_genesis_block(self) -> Block:
+        """创建创世区块"""
+        genesis_data = {
+            "message": "Genesis Block - Blockchain Donation System",
+            "timestamp": datetime.now().isoformat()
         }
 
-    @staticmethod
-    def create_genesis_block(db: Session) -> Block:
-        """创建创世区块"""
-        genesis_content = f"genesis_block_{datetime.utcnow().isoformat()}"
-        genesis_hash = BlockchainService.generate_hash(genesis_content)
+        timestamp_str = datetime.now().isoformat()
+        data_str = json.dumps(genesis_data, ensure_ascii=False)
+        previous_hash = "0" * 64
+
+        # 挖矿
+        hash_value, nonce = self.mine_block(0, timestamp_str, data_str, previous_hash, 4)
 
         genesis_block = Block(
-            height=0,
-            block_hash=genesis_hash,
-            prev_hash=None,
-            timestamp=datetime.utcnow(),
-            tx_count=0,
-            total_amount_in_block=Decimal('0.00'),
-            project_id_summary="",
-            raw_metadata=json.dumps({"type": "genesis", "note": "创世区块"})
+            index=0,
+            data=data_str,
+            previous_hash=previous_hash,
+            hash=hash_value,
+            nonce=nonce,
+            difficulty=4
         )
 
-        db.add(genesis_block)
-        db.commit()
-        db.refresh(genesis_block)
+        self.db.add(genesis_block)
+        await self.db.commit()
+        await self.db.refresh(genesis_block)
         return genesis_block
 
-    @staticmethod
-    def get_latest_block(db: Session) -> Optional[Block]:
-        """获取最新区块"""
-        return db.query(Block).order_by(desc(Block.height)).first()
+    async def add_block(self, transaction_data: TransactionData) -> Block:
+        """添加新区块"""
+        latest_block = await self.get_latest_block()
 
-    @staticmethod
-    def add_donation_to_chain(
-            db: Session,
-            project_id: int,
-            amount: Decimal,
-            donor_username: Optional[str] = None,
-            remark: Optional[str] = None,
-            external_donate_id: Optional[int] = None
-    ) -> Tuple[Block, ChainTransaction]:
-        """添加捐赠到区块链"""
+        if latest_block is None:
+            # 如果没有区块，创建创世区块
+            latest_block = await self.create_genesis_block()
 
-        # 获取最新区块
-        latest_block = BlockchainService.get_latest_block(db)
+        new_index = latest_block.index + 1
+        timestamp_str = datetime.now().isoformat()
+        data_str = json.dumps(transaction_data.dict(), ensure_ascii=False)
+        previous_hash = latest_block.hash
+        difficulty = 4
 
-        # 如果没有区块，创建创世区块
-        if not latest_block:
-            latest_block = BlockchainService.create_genesis_block(db)
+        # 挖矿
+        hash_value, nonce = await asyncio.get_event_loop().run_in_executor(
+            None, self.mine_block, new_index, timestamp_str, data_str, previous_hash, difficulty
+        )
 
-        # 计算新区块信息
-        new_height = latest_block.height + 1
-        prev_hash = latest_block.block_hash
-        timestamp = datetime.utcnow()
-
-        # 生成交易哈希
-        tx_content = f"{new_height}_{project_id}_{amount}_{donor_username or ''}_{timestamp.isoformat()}"
-        tx_hash = BlockchainService.generate_hash(tx_content)
-
-        # 生成区块哈希
-        block_content = f"{prev_hash}_{timestamp.isoformat()}_{project_id}_{amount}_{donor_username or ''}"
-        block_hash = BlockchainService.generate_hash(block_content)
-
-        # 创建新区块
         new_block = Block(
-            height=new_height,
-            block_hash=block_hash,
-            prev_hash=prev_hash,
-            timestamp=timestamp,
-            tx_count=1,
-            total_amount_in_block=amount,
-            project_id_summary=str(project_id),
-            raw_metadata=json.dumps({
-                "created_by": "donation_chain",
-                "projects": [project_id],
-                "total_amount": str(amount)
-            })
+            index=new_index,
+            data=data_str,
+            previous_hash=previous_hash,
+            hash=hash_value,
+            nonce=nonce,
+            difficulty=difficulty
         )
 
-        db.add(new_block)
-        db.flush()  # 获取区块ID
+        self.db.add(new_block)
+        await self.db.commit()
+        await self.db.refresh(new_block)
+        return new_block
 
-        # 创建交易记录
-        transaction = ChainTransaction(
-            block_id=new_block.id,
-            project_id=project_id,
-            donor_username=donor_username,
-            amount=amount,
-            remark=remark,
-            tx_hash=tx_hash,
-            tx_index=0,  # 目前每个区块只有一笔交易
-            timestamp=timestamp,
-            external_donate_id=external_donate_id
+    async def validate_chain(self) -> bool:
+        """验证整个区块链"""
+        blocks = await self.db.execute(
+            select(Block).order_by(Block.index)
         )
+        block_list = blocks.scalars().all()
 
-        db.add(transaction)
-        db.commit()
+        if not block_list:
+            return True
 
-        # 刷新对象以获取最新数据
-        db.refresh(new_block)
-        db.refresh(transaction)
+        # 验证每个区块
+        for i, block in enumerate(block_list):
+            # 验证哈希值
+            calculated_hash = self.calculate_hash(
+                block.index,
+                block.timestamp.isoformat(),
+                block.data,
+                block.previous_hash,
+                block.nonce
+            )
 
-        return new_block, transaction
+            if calculated_hash != block.hash:
+                return False
 
-    @staticmethod
-    def get_blocks_paginated(
-            db: Session,
-            offset: int = 0,
-            limit: int = 10
-    ) -> Tuple[int, List[Block]]:
-        """分页获取区块列表"""
-        total = db.query(Block).count()
-        blocks = (
-            db.query(Block)
-            .order_by(desc(Block.height))
-            .offset(offset)
-            .limit(limit)
-            .all()
+            # 验证工作量证明
+            if not self.is_valid_proof(
+                    block.index,
+                    block.timestamp.isoformat(),
+                    block.data,
+                    block.previous_hash,
+                    block.nonce,
+                    block.difficulty
+            ):
+                return False
+
+            # 验证前一个区块的哈希值（除了创世区块）
+            if i > 0 and block.previous_hash != block_list[i - 1].hash:
+                return False
+
+        return True
+
+    async def get_blockchain_info(self) -> BlockchainInfo:
+        """获取区块链信息"""
+        # 总区块数
+        total_blocks_result = await self.db.execute(select(func.count(Block.id)))
+        total_blocks = total_blocks_result.scalar() or 0
+
+        # 最新区块哈希
+        latest_block = await self.get_latest_block()
+        latest_block_hash = latest_block.hash if latest_block else ""
+
+        # 总交易数（除了创世区块）
+        total_transactions = max(0, total_blocks - 1)
+
+        # 验证链的有效性
+        chain_validity = await self.validate_chain()
+
+        return BlockchainInfo(
+            total_blocks=total_blocks,
+            latest_block_hash=latest_block_hash,
+            total_transactions=total_transactions,
+            chain_validity=chain_validity
         )
-        return total, blocks
-
-    @staticmethod
-    def get_block_by_height(db: Session, height: int) -> Optional[Block]:
-        """根据高度获取区块"""
-        return db.query(Block).filter(Block.height == height).first()
-
-    @staticmethod
-    def get_transaction_by_donate_id(
-            db: Session,
-            external_donate_id: int
-    ) -> Optional[ChainTransaction]:
-        """根据外部捐赠ID查询交易"""
-        return db.query(ChainTransaction).filter(
-            ChainTransaction.external_donate_id == external_donate_id
-        ).first()
